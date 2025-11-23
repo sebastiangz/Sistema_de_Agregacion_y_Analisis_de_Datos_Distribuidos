@@ -1,0 +1,6 @@
+timestamp,level,message
+2023-05-02 12:00:12,INFO,Arranque del sistema
+2023-05-02 12:00:13,ERROR,Fallo al cargar datos
+2023-05-02 12:00:15,WARNING,Campo no encontrado
+2023-05-02 12:00:15,INFO,Conexión establecida
+2023-05-02 12:00:16,ERROR,Fallo de disco
