@@ -1,0 +1,4 @@
+hola mundo esto es funcional
+mundo de datos funcional
+map reduce datos mundo
+python es genial y funcional
