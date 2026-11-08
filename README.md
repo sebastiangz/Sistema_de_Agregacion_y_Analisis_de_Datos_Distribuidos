@@ -1,3 +1,98 @@
+# Equipo 7 · 2026: Ailed, Camila y Eduardo
+
+Rama de trabajo: **`equipo7-2026-ailed-camila-eduardo`**. Partimos del código
+base de este repositorio y lo vamos mejorando por entregas.
+
+| Integrante | Matrícula |
+|---|---|
+| Ailed | _(pendiente)_ |
+| Camila | _(pendiente)_ |
+| Eduardo | _(pendiente)_ |
+
+## Alcances de nuestra implementación
+
+- **Map-Reduce funcional** en Python: estructuras inmutables, evaluación
+  perezosa y ejecución en paralelo con varios procesos.
+- **Agregación con Monoids y Semigroups**, con pruebas de sus leyes
+  (asociatividad y elemento neutro).
+- **Agregadores composables**: conteo, suma, promedio, mínimo y máximo,
+  varianza, percentiles y top-k, además de join y ventanas de tiempo.
+- **Varias fuentes de datos** leídas en paralelo (ventas de 3 sucursales y
+  logs de 2 servidores), con manejo de filas inválidas.
+- **Casos de uso**: dashboard de ventas para PyMEs y monitoreo de
+  servidores, con benchmarks de escalabilidad.
+- Pruebas automatizadas, documentación de arquitectura y referencias ACM.
+
+## Avance en esta rama
+
+### Semana 1: framework Map-Reduce funcional
+
+| Cambio | Antes (base) | Ahora |
+|---|---|---|
+| Ejemplos | Los 3 fallaban: `_file_`, `_name_ == "_main_"` y rutas a `data/sample` | Funcionan; `.gitignore` configurado |
+| Monoids y Semigroups | No existían | `src/monoid.py` con 10 instancias y `product_monoid`; leyes verificadas |
+| Motor MapReduce | Fallaba con lambdas (error de pickle) y modificaba `self.data` | Inmutable (`frozen`), perezoso, paralelo con combiner local y shuffle |
+| Corrección por tipos | `reduce_by_key` aceptaba cualquier función | Exige un `Semigroup`/`Monoid`; con otra cosa lanza `TypeError` |
+| Particionadores | `partition`, `partition_by_key`, `partition_by_range` | Se conservan y se agregan `chunk`, `hash_partition` y `range_partition` |
+| Pruebas | 9 pruebas, 2 fallaban | 55 pruebas, todas pasan |
+| Benchmark | Fallaba con lambdas | 1 millón de líneas: 0.53 s con 1 worker, 0.21 s con 4 (≈ 2.5×) |
+
+La API original sigue funcionando (`MapReduce().load(datos)`); el único cambio
+para quien la usa es pasar `SumMonoid` en lugar de una lambda a
+`reduce_by_key`.
+
+### Próximas entregas
+
+- **Semana 2:** agregadores composables (`Aggregator`, `combine`,
+  estadísticas, percentiles, top-k), join y ventanas.
+- **Semana 3:** lectura paralela de múltiples fuentes CSV con filas inmutables.
+- **Semana 4:** casos de uso (ventas con dashboard y logs), benchmarks y
+  documentación.
+
+## Cómo ejecutar
+
+```bash
+pip install pytest
+python -m pytest -v                       # 55 pruebas
+python examples/word_count.py
+python examples/sales_analytics.py
+python examples/log_analysis.py
+python -m benchmarks.performance_tests    # 1, 2 y 4 workers
+```
+
+```python
+from src.mapreduce import MapReduce
+from src.monoid import SumMonoid
+
+def tokenizar(linea): return linea.lower().split()
+def par_uno(palabra): return (palabra, 1)
+
+conteo = (
+    MapReduce.of(lineas, workers=4)
+    .flat_map(tokenizar)          # perezoso: aún no se ejecuta
+    .map(par_uno)                 # perezoso
+    .reduce_by_key(SumMonoid)     # aquí se ejecuta todo, en paralelo
+    .sort_by_value(descending=True)
+    .collect()
+)
+```
+
+## Uso de herramientas de inteligencia artificial
+
+En este proyecto se utilizó Claude (Anthropic), un asistente de inteligencia
+artificial, como apoyo para generar código base, pruebas, documentación y la
+planeación de los commits. El equipo revisó, ejecutó y validó el código con
+pruebas automatizadas y es responsable de su contenido.
+
+**Cita (APA 7):**
+Anthropic. (2026). *Claude* [Modelo de lenguaje de gran tamaño]. https://claude.ai
+
+---
+
+# Proyecto base
+
+_El contenido siguiente es el README original del repositorio._
+
 # 🌐 Proyecto 7: Sistema de Agregación y Análisis de Datos Distribuidos
 📋 Descripción del Proyecto
 Sistema funcional para procesamiento distribuido de grandes volúmenes de datos utilizando el paradigma MapReduce, operaciones de agregación composables y análisis estadístico paralelo.
