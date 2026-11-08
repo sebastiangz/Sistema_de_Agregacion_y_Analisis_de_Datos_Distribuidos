@@ -18,7 +18,7 @@ def sum_counts(a, b):
     return a + b
 
 def main():
-    log_path = os.path.join("data", "sample", "sample_logs.csv")
+    log_path = os.path.join("data", "samples", "sample_logs.csv")
     rows = list(read_logs(log_path))
 
     mr = MapReduce().load(rows)

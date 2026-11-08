@@ -20,7 +20,7 @@ def group_by(rows, field):
     return groups
 
 def main():
-    sales_path = os.path.join("data", "sample", "sample_sales.csv")
+    sales_path = os.path.join("data", "samples", "sample_sales.csv")
     rows = list(read_sales(sales_path))
 
     groups = group_by(rows, "category")

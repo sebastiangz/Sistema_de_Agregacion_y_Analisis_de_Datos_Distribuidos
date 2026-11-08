@@ -1,6 +1,6 @@
 import sys
 import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(_file_), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from src.mapreduce import MapReduce
 from src.visualization import print_top
@@ -18,7 +18,7 @@ def word_to_pair(words):
     return [(w, 1) for w in words if w]
 
 def main():
-    text_path = os.path.join("data", "sample", "sample_text.txt")
+    text_path = os.path.join("data", "samples", "sample_text.txt")
     lines = list(read_lines(text_path))
 
     mr = MapReduce().load(lines)
@@ -34,5 +34,5 @@ def main():
 
     print_top(result, n=20)
 
-if _name_ == "_main_":
+if __name__ == "__main__":
     main()
