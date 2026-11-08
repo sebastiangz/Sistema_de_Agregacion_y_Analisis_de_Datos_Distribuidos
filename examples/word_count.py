@@ -3,6 +3,7 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from src.mapreduce import MapReduce
+from src.monoid import SumMonoid
 from src.visualization import print_top
 
 def read_lines(path: str):
@@ -27,7 +28,7 @@ def main():
         mr
         .map(line_to_words)
         .flat_map(word_to_pair)
-        .reduce_by_key(lambda a, b: a + b)
+        .reduce_by_key(SumMonoid)
         .sort_by_value(descending=True)
         .collect()
     )
