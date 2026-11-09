@@ -6,7 +6,7 @@ base de este repositorio y lo vamos mejorando por entregas.
 | Integrante | Matrícula |
 |---|---|
 | Ailed Camila Gudiño Luna | 20224860 |
-| Camila Gaitán Guzmán | _(pendiente)_ |
+| Camila Gaitán Guzmán | 20221261 |
 | Eduardo Michel Magaña | 20221503 |
 
 ## Alcances de nuestra implementación
