@@ -4,6 +4,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 import csv
 from src.mapreduce import MapReduce
+from src.monoid import SumMonoid
 
 def read_logs(path: str):
     with open(path, "r", encoding="utf-8", newline="") as f:
@@ -14,11 +15,8 @@ def read_logs(path: str):
 def row_to_level(row):
     return (row.get("level", "UNKNOWN"), 1)
 
-def sum_counts(a, b):
-    return a + b
-
 def main():
-    log_path = os.path.join("data", "sample", "sample_logs.csv")
+    log_path = os.path.join("data", "samples", "sample_logs.csv")
     rows = list(read_logs(log_path))
 
     mr = MapReduce().load(rows)
@@ -26,7 +24,7 @@ def main():
     result = (
         mr
         .map(row_to_level)
-        .reduce_by_key(sum_counts)
+        .reduce_by_key(SumMonoid)
         .sort_by_value(descending=True)
         .collect()
     )

@@ -1,8 +1,9 @@
 import sys
 import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(_file_), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from src.mapreduce import MapReduce
+from src.monoid import SumMonoid
 from src.visualization import print_top
 
 def read_lines(path: str):
@@ -18,7 +19,7 @@ def word_to_pair(words):
     return [(w, 1) for w in words if w]
 
 def main():
-    text_path = os.path.join("data", "sample", "sample_text.txt")
+    text_path = os.path.join("data", "samples", "sample_text.txt")
     lines = list(read_lines(text_path))
 
     mr = MapReduce().load(lines)
@@ -27,12 +28,12 @@ def main():
         mr
         .map(line_to_words)
         .flat_map(word_to_pair)
-        .reduce_by_key(lambda a, b: a + b)
+        .reduce_by_key(SumMonoid)
         .sort_by_value(descending=True)
         .collect()
     )
 
     print_top(result, n=20)
 
-if _name_ == "_main_":
+if __name__ == "__main__":
     main()
