@@ -29,10 +29,8 @@ def main():
         .collect()
     )
 
-    total = sum(count for _, count in result)
-    print(f"Registros analizados: {total}")
     for level, count in result:
-        print(f"{level:<8} {count:>3}  ({count / total:.0%})")
+        print(level, count)
 
 if __name__ == "__main__":
     main()
