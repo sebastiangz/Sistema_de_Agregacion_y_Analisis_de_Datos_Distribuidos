@@ -31,9 +31,14 @@ def main():
         avg=avg_aggregator("amount"),
     )
 
+    print("Ventas por categoría")
+    print("-" * 58)
     for category, items in groups.items():
         stats = agg(items)
-        print(category, stats)
+        print(
+            f"{category:<10} total: ${stats['total']:>8.2f} "
+            f"ventas: {stats['count']} promedio: ${stats['avg']:.2f}"
+        )
 
 if __name__ == "__main__":
     main()
