@@ -31,3 +31,14 @@ def test_avg_aggregator_field():
     assert agg.aggregate(data) == 4.0
 
 
+def test_min_aggregator():
+    from src.aggregators import min_aggregator
+
+    assert min_aggregator().aggregate([5, 2, 8]) == 2
+    assert min_aggregator("value").aggregate([{"value": 4}, {"value": 1}]) == 1
+    assert min_aggregator().aggregate([]) is None
+
+
+
+
+
