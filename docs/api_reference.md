@@ -30,3 +30,8 @@ Objeto inmutable: cada operación devuelve un MapReduce nuevo.
 - `count_aggregator()`
 - `avg_aggregator(field=None)`
 - `compose_aggregators(**aggs)`
+
+# Funciones del Equipo 7
+
+- `porcentaje(parte, total)` (`src/metricas.py`): qué porcentaje es `parte` de `total`, de 0 a 100. Si el total es regresa `0.0`.
+- `min_aggregator(field=None)` (`src/aggregators.py`): agregador del valor mínimo; con datos vacíos regresa `None`.
