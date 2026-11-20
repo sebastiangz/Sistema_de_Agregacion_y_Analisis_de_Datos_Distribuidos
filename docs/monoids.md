@@ -34,3 +34,6 @@ from src.monoid import SumMonoid
 total = monoid_aggregator(SumMonoid, "amount").aggregate(ventas)
 ```
 El dashboard (`examples/dashboard.py`) lo usa para calcular el total de ventas.
+
+- `monoid_aggregator(monoid, field=None)` (`src/aggregators.py`): convierte un Monoid en agregador. Explicación en 
+`docs/monoids.md`.- `examples/dashboard.py`: dashboard de ventas en consola. Se ejecuta con `python examples/dashboard.py`.
