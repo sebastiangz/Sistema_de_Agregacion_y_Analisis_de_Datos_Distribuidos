@@ -38,6 +38,13 @@ def test_min_aggregator():
     assert min_aggregator("value").aggregate([{"value": 4}, {"value": 1}]) == 1
     assert min_aggregator().aggregate([]) is None
 
+def test_max_aggregator():
+    from src.aggregators import max_aggregator
+    assert max_aggregator().aggregate([5, 2, 8]) == 8
+    assert max_aggregator("value").aggregate([{"value": 4}, {"value": 1}]) == 4
+    assert max_aggregator().aggregate([]) is None
+ 
+
 
 
 

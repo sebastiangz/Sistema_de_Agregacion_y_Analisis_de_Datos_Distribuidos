@@ -99,3 +99,20 @@ def _menor(a, b):
     if b is None:
         return a
     return a if a <= b else b
+
+def max_aggregator(field: str | None = None) -> Aggregator:
+    """Agregador del valor máximo. Con datos vacíos regresa None."""
+    return Aggregator(
+        initializer=lambda: None,
+        accumulator=lambda acc, x: _mayor(acc, x[field] if field else x),
+        combiner=_mayor,
+    )
+
+
+def _mayor(a, b):
+    """El mayor de dos valores, ignorando None (el neutro)."""
+    if a is None:
+        return b
+    if b is None:
+        return a
+    return a if a >= b else b
