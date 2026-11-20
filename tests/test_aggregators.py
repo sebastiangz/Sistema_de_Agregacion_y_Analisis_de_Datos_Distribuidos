@@ -45,7 +45,19 @@ def test_max_aggregator():
     assert max_aggregator().aggregate([]) is None
  
 
+def test_monoid_aggregator_suma_igual_que_sum():
+    from src.aggregators import monoid_aggregator
+    from src.monoid import SumMonoid
+    ventas = [{"amount": 10.0}, {"amount": 5.5}, {"amount": 4.5}]
+    assert monoid_aggregator(SumMonoid, "amount").aggregate(ventas) == 20.0
 
+def test_monoid_aggregator_partes_combinadas_igual_al_todo():
+    from src.aggregators import monoid_aggregator
+    from src.monoid import MaxMonoid
+    agg = monoid_aggregator(MaxMonoid)
+    datos = [3, 9, 1, 7, 4]
+    parte1, parte2 = agg.aggregate(datos[:2]), agg.aggregate(datos[2:])
+    assert agg.combiner(parte1, parte2) == agg.aggregate(datos) == 9
 
 
 
