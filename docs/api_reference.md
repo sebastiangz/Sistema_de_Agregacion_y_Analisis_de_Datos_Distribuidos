@@ -31,10 +31,32 @@ Objeto inmutable: cada operación devuelve un MapReduce nuevo.
 - `avg_aggregator(field=None)`
 - `compose_aggregators(**aggs)`
 
-# Funciones del Equipo 7
+## Funciones del Equipo 7
 
-- `porcentaje(parte, total)` (`src/metricas.py`): qué porcentaje es `parte` de `total`, de 0 a 100. Si el total es regresa `0.0`.
+### Métricas y ordenamiento
+
+- `porcentaje(parte, total)` (`src/metricas.py`): qué porcentaje es `parte` de `total`, de 0 a 100. Si el total es 0 regresa `0.0`.
+- `top_k(conteos, k)` (`src/ranking.py`): los k pares (clave, valor) con el valor más alto, de mayor a menor. No modifica la entrada.
+
+### Agregadores
+
 - `min_aggregator(field=None)` (`src/aggregators.py`): agregador del valor mínimo; con datos vacíos regresa `None`.
-- `top_k(conteos, k)` (`src/ranking.py`): los k pares (clave, valor) con el valor más alto, de mayor a menor. No
-modifica la entrada.
-- `max_aggregator(field=None)` (`src/aggregators.py`): agregador del valor máximo; con datos vacíos regresa None.
+- `max_aggregator(field=None)` (`src/aggregators.py`): agregador del valor máximo; con datos vacíos regresa `None`.
+- `monoid_aggregator(monoid, field=None)` (`src/aggregators.py`): convierte un Monoid en agregador. Explicación en `docs/monoids.md`.
+
+### Composición de funciones (`src/funcional.py`)
+
+- `compose(*funciones)`: compone de derecha a izquierda; `compose(f, g)(x) == f(g(x))`.
+- `pipe(valor, *funciones)`: pasa un valor por las funciones de izquierda a derecha; `pipe(x, f, g) == g(f(x))`.
+- `identidad(x)`: regresa el mismo valor; es el neutro de la composición.
+
+### Manejo de errores con Either (`src/resultado.py`)
+
+- `Ok(valor)` y `Err(error)`: resultado exitoso o fallido, inmutables, con `map` y `bind`.
+- `intentar(fn, *args)`: ejecuta la función y convierte un `ValueError`, `KeyError` o `TypeError` en `Err`.
+- `separar(resultados)`: regresa `(valores de los Ok, mensajes de los Err)`.
+
+### Dashboard (`examples/dashboard.py`)
+
+- `leer_fuentes(fuentes)`: junta varias fuentes CSV y regresa `(ventas, errores)`; una fila inválida no detiene la lectura.
+- `dashboard(ventas, errores=())`: texto del dashboard de ventas. Se ejecuta con `python examples/dashboard.py`.
