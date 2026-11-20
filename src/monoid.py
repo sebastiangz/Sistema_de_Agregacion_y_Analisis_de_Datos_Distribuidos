@@ -38,7 +38,11 @@ class Semigroup(Generic[A]):
     name: str = "semigroup"
 
     def combine_all(self, values: Iterable[A]) -> A:
-        """Reduce una colección NO vacía."""
+        """Reduce una colección con `combine`.
+
+        Pre: `values` no está vacía y `combine` es asociativa.
+        Post: regresa un solo valor; lanza ValueError si `values` está vacía.
+        """
         iterator = iter(values)
         try:
             first = next(iterator)
@@ -59,7 +63,12 @@ class Monoid(Semigroup[A]):
     batch: Optional[Callable[[Iterable[A]], A]] = None
 
     def fold(self, values: Iterable[A]) -> A:
-        """Reduce cualquier colección (vacía incluida) empezando en ``empty``."""
+        """Reduce cualquier colección, empezando en ``empty``.
+
+        Pre: `combine` es asociativa y `empty` es su neutro.
+        Post: regresa ``empty`` si `values` está vacía; el resultado no
+              depende de cómo se agrupen los valores.
+        """
         if self.batch is not None:
             return self.batch(values)
         return reduce(self.combine, values, self.empty)

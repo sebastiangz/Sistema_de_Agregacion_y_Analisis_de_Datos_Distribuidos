@@ -234,6 +234,13 @@ class MapReduce(Generic[T]):
         """Reduce los valores de cada clave con un Semigroup (operación asociativa).
 
         Implementa split -> map + combine local -> shuffle -> reduce.
+
+        Pre: los elementos son pares (clave, valor) y `semigroup` es un
+             Semigroup o Monoid cuya operación es asociativa.
+        Post: un MapReduce NUEVO con un par por clave, ordenado por clave si
+              las claves son comparables. El resultado es el mismo con 1 o
+              con varios workers. Lanza TypeError si `semigroup` no es un
+              Semigroup.
         """
         if not isinstance(semigroup, Semigroup):
             raise TypeError(
@@ -271,7 +278,12 @@ class MapReduce(Generic[T]):
     # ----- acciones (devuelven un valor) ------------------------------------
 
     def aggregate(self, monoid: Monoid[T]) -> T:
-        """Reduce TODA la colección con un Monoid, en paralelo por bloques."""
+        """Reduce TODA la colección con un Monoid, en paralelo por bloques.
+
+        Pre: `monoid` es un Monoid (operación asociativa con neutro).
+        Post: regresa un solo valor; con datos vacíos regresa ``monoid.empty``.
+              Lanza TypeError si no es un Monoid.
+        """
         if not isinstance(monoid, Monoid):
             raise TypeError("aggregate requiere un Monoid")
         partials = self._run(_task_fold, (self.ops, monoid), self._blocks())
