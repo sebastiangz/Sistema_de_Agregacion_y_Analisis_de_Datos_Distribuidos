@@ -24,3 +24,10 @@ def test_group_by_no_modifica_las_filas():
     copia = tuple(dict(f) for f in FILAS)
     group_by(FILAS, "category")
     assert FILAS == copia
+
+
+def test_reporte_es_texto_sin_efectos():
+    from examples.sales_analytics import reporte
+    texto = reporte(FILAS)
+    assert texto.splitlines()[0] == "Ventas por categoría"
+    assert "Bebidas    total: $   50.00 ventas: 2 promedio: $25.00" in texto

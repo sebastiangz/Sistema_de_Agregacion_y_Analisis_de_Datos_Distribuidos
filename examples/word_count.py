@@ -20,14 +20,13 @@ def line_to_words(line):
 def word_to_pair(words):
     return [(w, 1) for w in words if w]
 
-def main():
-    text_path = os.path.join("data", "samples", "sample_text.txt")
-    lines = list(read_lines(text_path))
+def contar_palabras(lines):
+    """Cuenta cuántas veces aparece cada palabra con Map-Reduce.
 
-    mr = MapReduce().load(lines)
-
-    result = (
-        mr
+    Post: lista nueva de pares (palabra, cantidad), de la más repetida a la menos.
+    """
+    return (
+        MapReduce().load(lines)
         .map(line_to_words) # Map: cada línea se vuelve su lista de palabras
         .flat_map(word_to_pair) # cada palabra se vuelve el par (palabra, 1)
         .reduce_by_key(SumMonoid) # Reduce: suma los 1 de cada palabra
@@ -35,9 +34,14 @@ def main():
         .collect() # aquí se ejecuta todo y se obtiene la lista
     )
 
+
+def main():
+    text_path = os.path.join("data", "samples", "sample_text.txt")
+    result = contar_palabras(read_lines(text_path))
     print(f"Top 20 palabras ({len(result)} palabras distintas en total)")
     print("-" * 40)
     print_top(top_k(result, 20), n=20)
+
 
 if __name__ == "__main__":
     main()

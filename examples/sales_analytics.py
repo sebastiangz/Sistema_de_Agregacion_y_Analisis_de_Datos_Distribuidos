@@ -36,26 +36,30 @@ def group_by(rows, field):
     return reduce(lambda grupos, row: agregar_a_grupo(grupos, row, field), rows, {})
 
 
+RESUMEN = compose_aggregators(
+    total=sum_aggregator("amount"),
+    count=count_aggregator(),
+    avg=avg_aggregator("amount"),
+)
+
+
+def renglon(category, stats):
+    """Una línea del reporte de ventas de una categoría."""
+    return (f"{category:<10} total: ${stats['total']:>8.2f} "
+            f"ventas: {stats['count']} promedio: ${stats['avg']:.2f}")
+
+
+def reporte(rows):
+    """Texto del reporte por categoría. Es pura: no imprime ni lee archivos."""
+    groups = group_by(rows, "category")
+    lineas = ["Ventas por categoría", "-" * 58]
+    return "\n".join(lineas + [renglon(c, RESUMEN(items)) for c, items in groups.items()])
+
+
 def main():
     sales_path = os.path.join("data", "samples", "sample_sales.csv")
-    rows = read_sales(sales_path)
+    print(reporte(read_sales(sales_path)))
 
-    groups = group_by(rows, "category")
-
-    agg = compose_aggregators(
-        total=sum_aggregator("amount"),
-        count=count_aggregator(),
-        avg=avg_aggregator("amount"),
-    )
-
-    print("Ventas por categoría")
-    print("-" * 58)
-    for category, items in groups.items():
-        stats = agg(items)
-        print(
-            f"{category:<10} total: ${stats['total']:>8.2f} "
-            f"ventas: {stats['count']} promedio: ${stats['avg']:.2f}"
-        )
 
 if __name__ == "__main__":
     main()
