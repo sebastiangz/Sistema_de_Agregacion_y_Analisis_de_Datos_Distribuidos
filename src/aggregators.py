@@ -82,3 +82,20 @@ def test_porcentajes_de_todas_las_partes_suman_100():
     conteos = (2, 2, 1)
     total = sum(conteos)
     assert round(sum(map(lambda c: porcentaje(c, total), conteos))) == 100
+
+def min_aggregator(field: str | None = None) -> Aggregator:
+    """Agregador del valor mínimo. Con datos vacíos regresa None."""
+    return Aggregator(
+        initializer=lambda: None,
+        accumulator=lambda acc, x: _menor(acc, x[field] if field else x),
+        combiner=_menor,
+    )
+
+
+def _menor(a, b):
+    """El menor de dos valores, ignorando None (el neutro)."""
+    if a is None:
+        return b
+    if b is None:
+        return a
+    return a if a <= b else b
