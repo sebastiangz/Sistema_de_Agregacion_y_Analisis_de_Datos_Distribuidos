@@ -5,6 +5,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 import csv
 from src.mapreduce import MapReduce
 from src.monoid import SumMonoid
+from src.metricas import porcentaje
 
 def read_logs(path: str):
     with open(path, "r", encoding="utf-8", newline="") as f:
@@ -32,7 +33,7 @@ def main():
     total = sum(count for _, count in result)
     print(f"Registros analizados: {total}")
     for level, count in result:
-        print(f"{level:<8} {count:>3}  ({count / total:.0%})")
+        print(f"{level.<8} {count.>3}  ({porcentaje(count, total):.0f}%)")
 
 if __name__ == "__main__":
     main()
