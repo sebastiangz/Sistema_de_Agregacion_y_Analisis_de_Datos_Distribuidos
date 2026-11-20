@@ -35,3 +35,6 @@ Objeto inmutable: cada operación devuelve un MapReduce nuevo.
 
 - `porcentaje(parte, total)` (`src/metricas.py`): qué porcentaje es `parte` de `total`, de 0 a 100. Si el total es regresa `0.0`.
 - `min_aggregator(field=None)` (`src/aggregators.py`): agregador del valor mínimo; con datos vacíos regresa `None`.
+- `top_k(conteos, k)` (`src/ranking.py`): los k pares (clave, valor) con el valor más alto, de mayor a menor. No
+modifica la entrada.
+- `max_aggregator(field=None)` (`src/aggregators.py`): agregador del valor máximo; con datos vacíos regresa None.

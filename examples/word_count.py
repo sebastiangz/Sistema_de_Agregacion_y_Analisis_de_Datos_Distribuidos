@@ -5,6 +5,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 from src.mapreduce import MapReduce
 from src.monoid import SumMonoid
 from src.visualization import print_top
+from src.ranking import top_k
 
 def read_lines(path: str):
     with open(path, "r", encoding="utf-8") as f:
@@ -36,7 +37,7 @@ def main():
 
     print(f"Top 20 palabras ({len(result)} palabras distintas en total)")
     print("-" * 40)
-    print_top(result, n=20)
+    print_top(top_k(result, 20), n=20)
 
 if __name__ == "__main__":
     main()
