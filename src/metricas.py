@@ -1,8 +1,8 @@
-""Funciones puras de métricas simples."""
+"""Funciones puras de métricas simples."""
 
 
 def porcentaje(parte: float, total: float) -> float:
-    """Regresa qué porcentaje es parte de total, de 0 a 100.
+    """Regresa qué porcentaje es `parte` de `total`, de 0 a 100.
 
     Si el total es 0 regresa 0.0 en lugar de dividir entre cero.
     """
