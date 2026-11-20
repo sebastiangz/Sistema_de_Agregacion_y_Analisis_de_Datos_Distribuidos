@@ -116,3 +116,14 @@ def _mayor(a, b):
     if b is None:
         return a
     return a if a >= b else b
+
+def monoid_aggregator(monoid, field: str | None = None) -> Aggregator:
+    """Convierte un Monoid en un Aggregator.
+    El neutro del Monoid es el valor inicial, y su `combine` sirve para
+    acumular y para juntar resultados parciales de distintos workers.
+    """
+    return Aggregator(
+        initializer=lambda: monoid.empty,
+        accumulator=lambda acc, x: monoid.combine(acc, x[field] if field else x),
+        combiner=monoid.combine,
+    )
