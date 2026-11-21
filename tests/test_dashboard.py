@@ -17,3 +17,28 @@ def test_dashboard_no_modifica_las_ventas():
     copia = tuple(dict(v) for v in VENTAS)
     dashboard(VENTAS)
     assert VENTAS == copia
+
+def test_convertir_fila_invalida_regresa_err():
+    from examples.dashboard import convertir_fila
+    fila = {"id": "N6", "category": "Bebidas", "amount": "N/A"}
+    resultado = convertir_fila(fila, "norte")
+    assert not resultado.es_ok
+    assert resultado.error.startswith("norte, fila N6")
+    assert fila["amount"] == "N/A"
+
+
+def test_leer_fuentes_junta_varias_y_separa_errores(tmp_path):
+    from examples.dashboard import leer_fuentes
+    (tmp_path / "a.csv").write_text("id,category,amount\n1,Bebidas,10\n", encoding="utf-8")
+    (tmp_path / "b.csv").write_text("id,category,amount\n2,Comida,5\n3,Comida,x\n", encoding="utf-8")
+    ventas, errores = leer_fuentes((("a", tmp_path / "a.csv"), ("b", tmp_path / "b.csv")))
+    assert tuple(v["fuente"] for v in ventas) == ("a", "b")
+    assert len(errores) == 1 and errores[0].startswith("b, fila 3")
+
+
+def test_dashboard_reporta_errores_y_fuentes():
+    from examples.dashboard import dashboard
+    ventas = ({"category": "Bebidas", "amount": 10.0, "fuente": "centro"},)
+    texto = dashboard(ventas, ("norte, fila N6: ValueError",))
+    assert "Por fuente: centro $10.00" in texto
+    assert "Fila ignorada (norte, fila N6: ValueError)" in texto

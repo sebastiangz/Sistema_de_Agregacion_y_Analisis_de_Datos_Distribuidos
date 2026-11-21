@@ -1,7 +1,6 @@
-# Equipo 7 · 2026: Ailed, Camila y Eduardo
+# Sistema de Agregación y Análisis de Datos Distribuidos
 
-Rama de trabajo: **`equipo7-2026-ailed-camila-eduardo`**. Partimos del código
-base de este repositorio y lo vamos mejorando por entregas.
+**Equipo 7 · 2026** · Programación Funcional · Universidad de Colima
 
 | Integrante | Matrícula |
 |---|---|
@@ -9,56 +8,86 @@ base de este repositorio y lo vamos mejorando por entregas.
 | Camila Gaitán Guzmán | 20221261 |
 | Eduardo Michel Magaña | 20221503 |
 
-## Alcances de nuestra implementación
+Sistema en Python que **junta y resume datos de varias fuentes** con el patrón
+**Map-Reduce**, en estilo funcional: los datos no se modifican, cada paso es
+una función pura y el trabajo se puede repartir entre varios procesos.
 
-- **Map-Reduce funcional** en Python: estructuras inmutables, evaluación
-  perezosa y ejecución en paralelo con varios procesos.
-- **Agregación con Monoids y Semigroups**, con pruebas de sus leyes
-  (asociatividad y elemento neutro).
-- **Agregadores composables**: conteo, suma, promedio, mínimo y máximo,
-  varianza, percentiles y top-k, además de join y ventanas de tiempo.
-- **Varias fuentes de datos** leídas en paralelo (ventas de 3 sucursales y
-  logs de 2 servidores), con manejo de filas inválidas.
-- **Casos de uso**: dashboard de ventas para PyMEs y monitoreo de
-  servidores, con benchmarks de escalabilidad.
-- Pruebas automatizadas, documentación de arquitectura y referencias ACM.
+## Alcances
 
-## Avance en esta rama
+- **Map-Reduce funcional:** `map`, `flat_map`, `filter`, `reduce_by_key`,
+  `group_by_key` y `aggregate`, inmutable, con evaluación perezosa y
+  ejecución en paralelo con varios procesos (workers).
+- **Monoids y Semigroups** para combinar resultados en paralelo, con pruebas de
+  sus leyes (asociatividad y elemento neutro).
+- **Agregadores composables:** suma, conteo, promedio, mínimo, máximo y
+  `monoid_aggregator`, que se combinan con `compose_aggregators`.
+- **Composición de funciones** con `compose` y `pipe`.
+- **Manejo funcional de errores** con Either (`Ok` / `Err`): una fila inválida
+  se reporta sin detener el programa.
+- **Varias fuentes de datos:** el dashboard junta las ventas de dos sucursales.
+- **Caso de uso:** dashboard de ventas en consola, más análisis de logs y
+  conteo de palabras.
+- **87 pruebas automatizadas** y benchmark de escalabilidad documentado.
 
-### Semana 1: framework Map-Reduce funcional
+## Cómo se cumple cada requisito
 
-| Cambio | Antes (base) | Ahora |
-|---|---|---|
-| Ejemplos | Los 3 fallaban: `_file_`, `_name_ == "_main_"` y rutas a `data/sample` | Funcionan; `.gitignore` configurado |
-| Monoids y Semigroups | No existían | `src/monoid.py` con 10 instancias y `product_monoid`; leyes verificadas |
-| Motor MapReduce | Fallaba con lambdas (error de pickle) y modificaba `self.data` | Inmutable (`frozen`), perezoso, paralelo con combiner local y shuffle |
-| Corrección por tipos | `reduce_by_key` aceptaba cualquier función | Exige un `Semigroup`/`Monoid`; con otra cosa lanza `TypeError` |
-| Particionadores | `partition`, `partition_by_key`, `partition_by_range` | Se conservan y se agregan `chunk`, `hash_partition` y `range_partition` |
-| Pruebas | 9 pruebas, 2 fallaban | 55 pruebas, todas pasan |
-| Benchmark | Fallaba con lambdas | 1 millón de líneas: 0.53 s con 1 worker, 0.21 s con 4 (≈ 2.5×) |
+| Requisito | Dónde |
+|---|---|
+| Implementación funcional de Map-Reduce | `src/mapreduce.py` |
+| Funciones de agregación composables | `src/aggregators.py` (`compose_aggregators`, `min_aggregator`, `max_aggregator`, `monoid_aggregator`) |
+| Paralelismo con inmutabilidad | `MapReduce` es `@dataclass(frozen=True)` y reparte bloques con `ProcessPoolExecutor` |
+| Sistema de tipos para garantizar corrección | `reduce_by_key` solo acepta un `Semigroup`/`Monoid`; con otra cosa lanza `TypeError`. Anotaciones genéricas `Monoid[A]` y `MapReduce[T]` |
+| Monoids y Semigroups | `src/monoid.py` y la guía [`docs/monoids.md`](docs/monoids.md) |
+| Manejo de errores (Maybe/Either) | `src/resultado.py` (`Ok`, `Err`, `intentar`, `separar`) |
+| Composición de funciones | `src/funcional.py` (`compose`, `pipe`) |
 
-La API original sigue funcionando (`MapReduce().load(datos)`); el único cambio
-para quien la usa es pasar `SumMonoid` en lugar de una lambda a
-`reduce_by_key`.
+## Instalación
 
-### Próximas entregas
-
-- **Semana 2:** agregadores composables (`Aggregator`, `combine`,
-  estadísticas, percentiles, top-k), join y ventanas.
-- **Semana 3:** lectura paralela de múltiples fuentes CSV con filas inmutables.
-- **Semana 4:** casos de uso (ventas con dashboard y logs), benchmarks y
-  documentación.
-
-## Cómo ejecutar
+Requiere Python 3.10 o superior.
 
 ```bash
-pip install pytest
-python -m pytest -v                       # 55 pruebas
-python examples/word_count.py
-python examples/sales_analytics.py
-python examples/log_analysis.py
-python -m benchmarks.performance_tests    # 1, 2 y 4 workers
+git clone https://github.com/sebastiangz/Sistema_de_Agregacion_y_Analisis_de_Datos_Distribuidos.git
+cd Sistema_de_Agregacion_y_Analisis_de_Datos_Distribuidos
+python -m pip install pytest
 ```
+
+El núcleo (`src/mapreduce.py`, `src/monoid.py`, `src/aggregators.py`) solo usa
+la biblioteca estándar. `requirements.txt` incluye además las dependencias de
+los módulos originales del repositorio (`distributed.py` usa Dask y
+`visualization.py` usa Matplotlib).
+
+## Uso
+
+```bash
+python -m pytest -q                       # 87 pruebas
+python examples/dashboard.py              # dashboard de ventas (2 sucursales)
+python examples/sales_analytics.py        # ventas por categoría
+python examples/log_analysis.py           # registros por nivel, con porcentaje
+python examples/word_count.py             # conteo de palabras
+python -m benchmarks.performance_tests    # tiempos con 1, 2 y 4 workers
+```
+
+Salida del dashboard:
+
+```
+DASHBOARD DE VENTAS · 21 ventas · total $1018.80
+--------------------------------------------------------------------------------------------------
+Comida    #################### $ 535.70  52.6%  ventas: 6  prom: $89.28  min: $60.20  max: $110.00
+Postres   ########             $ 204.50  20.1%  ventas: 4  prom: $51.12  min: $40.00  max: $61.00
+Bebidas   ######               $ 162.10  15.9%  ventas: 6  prom: $27.02  min: $18.00  max: $40.10
+Snacks    ####                 $ 116.50  11.4%  ventas: 5  prom: $23.30  min: $15.00  max: $32.00
+--------------------------------------------------------------------------------------------------
+Por fuente: centro $718.80, norte $300.00
+Fila ignorada (norte, fila N6: ValueError: could not convert string to float: 'N/A')
+Top 3 categorías: Comida ($535.70), Postres ($204.50), Bebidas ($162.10)
+```
+
+La fila `N6` de la sucursal norte tiene un monto inválido a propósito: se
+reporta como `Err` y el resto de las ventas se procesa normalmente.
+
+### Ejemplos de código
+
+**Map-Reduce con un Monoid:**
 
 ```python
 from src.mapreduce import MapReduce
@@ -77,6 +106,102 @@ conteo = (
 )
 ```
 
+**Agregadores composables:**
+
+```python
+from src.aggregators import compose_aggregators, count_aggregator, max_aggregator, monoid_aggregator
+from src.monoid import SumMonoid
+
+resumen = compose_aggregators(
+    total=monoid_aggregator(SumMonoid, "amount"),
+    ventas=count_aggregator(),
+    maximo=max_aggregator("amount"),
+)
+resumen(ventas)   # {'total': ..., 'ventas': ..., 'maximo': ...}
+```
+
+**Manejo de errores con Either y composición:**
+
+```python
+from src.funcional import compose, pipe
+from src.resultado import intentar, separar
+
+resultados = map(lambda texto: intentar(float, texto), ["12.5", "N/A", "3"])
+valores, errores = separar(resultados)      # (12.5, 3.0), ("ValueError: ...",)
+
+pipe(valores, sum, round)                   # round(sum(valores)) -> 16
+compose(round, sum)(valores)                # lo mismo, de derecha a izquierda
+```
+
+## Estructura
+
+```
+src/
+  mapreduce.py      Motor Map-Reduce inmutable, perezoso y paralelo
+  monoid.py         Semigroup, Monoid e instancias (Sum, Count, Min, Max, Avg...)
+  aggregators.py    Agregadores composables
+  partitioners.py   Reparto de datos: bloques, hash (shuffle) y rangos
+  funcional.py      compose, pipe e identidad
+  resultado.py      Either: Ok, Err, intentar y separar
+  metricas.py       porcentaje
+  ranking.py        top_k
+  combiners.py, distributed.py, visualization.py   Módulos originales del repositorio
+examples/           dashboard, sales_analytics, log_analysis y word_count
+tests/              87 pruebas (pytest)
+benchmarks/         performance_tests.py
+data/samples/       CSV de ventas (2 sucursales), logs y texto de ejemplo
+docs/               Arquitectura, API, Monoids y resultados del benchmark
+```
+
+## Documentación
+
+- [`docs/architecture.md`](docs/architecture.md): módulos, flujo de `reduce_by_key` y decisiones de diseño.
+- [`docs/api_reference.md`](docs/api_reference.md): referencia de todas las funciones.
+- [`docs/monoids.md`](docs/monoids.md): qué es un Monoid y por qué permite paralelizar.
+- [`docs/benchmarks.md`](docs/benchmarks.md): resultados y análisis del benchmark.
+- Las funciones principales documentan sus contratos con `Pre:` y `Post:` en el docstring.
+
+## Resultados del benchmark
+
+Conteo de palabras en 1 millón de líneas (Linux, 4 CPUs, mediana de 3 ejecuciones):
+
+| Workers | Tiempo | Speedup |
+|---:|---:|---:|
+| 1 | 0.70 s | 1.00× |
+| 2 | 0.42 s | 1.67× |
+| 4 | 0.23 s | 3.04× |
+
+El resultado es idéntico con cualquier número de workers, porque la suma es un
+Monoid. No escala de forma lineal por el costo de crear procesos y enviarles
+los datos. Análisis completo en [`docs/benchmarks.md`](docs/benchmarks.md).
+
+## Avance por semana
+
+| Semana | Entregable | Qué se hizo |
+|---|---|---|
+| 1 | Framework básico de Map-Reduce funcional | Motor `MapReduce` inmutable y paralelo, Monoids y Semigroups, particionadores; se corrigieron los errores de la base (PR #1) |
+| 2 | Operadores de agregación composables | `min_aggregator`, `max_aggregator`, `monoid_aggregator`, `porcentaje` y `top_k`, uno por integrante con su prueba (PR #8, #9 y #11) |
+| 3 | Sistema de procesamiento paralelo | Workers con combiner local y shuffle; lectura de varias fuentes con manejo de errores Either |
+| 4 | Casos de uso y benchmarks | Dashboard de ventas en consola, análisis de logs, conteo de palabras y benchmark documentado |
+
+## Referencias
+
+1. Dean, J., & Ghemawat, S. (2008). MapReduce: Simplified data processing on
+   large clusters. *Communications of the ACM, 51*(1), 107–113.
+   https://doi.org/10.1145/1327452.1327492
+2. Dean, J., & Ghemawat, S. (2010). MapReduce: A flexible data processing tool.
+   *Communications of the ACM, 53*(1), 72–77.
+   https://doi.org/10.1145/1629175.1629198
+3. Yu, Y., Gunda, P. K., & Isard, M. (2009). Distributed aggregation for
+   data-parallel computing: Interfaces and implementations. *Proceedings of
+   the ACM SIGOPS 22nd Symposium on Operating Systems Principles (SOSP '09)*,
+   247–260. https://doi.org/10.1145/1629575.1629600
+4. Zaharia, M., Xin, R. S., Wendell, P., Das, T., Armbrust, M., Dave, A.,
+   Meng, X., Rosen, J., Venkataraman, S., Franklin, M. J., Ghodsi, A.,
+   Gonzalez, J., Shenker, S., & Stoica, I. (2016). Apache Spark: A unified
+   engine for big data processing. *Communications of the ACM, 59*(11),
+   56–65. https://doi.org/10.1145/2934664
+
 ## Uso de herramientas de inteligencia artificial
 
 En este proyecto se utilizó Claude (Anthropic), un asistente de inteligencia
@@ -89,422 +214,5 @@ Anthropic. (2026). *Claude* [Modelo de lenguaje de gran tamaño]. https://claude
 
 ---
 
-# Proyecto base
-
-_El contenido siguiente es el README original del repositorio._
-
-# 🌐 Proyecto 7: Sistema de Agregación y Análisis de Datos Distribuidos
-📋 Descripción del Proyecto
-Sistema funcional para procesamiento distribuido de grandes volúmenes de datos utilizando el paradigma MapReduce, operaciones de agregación composables y análisis estadístico paralelo.
-
-Universidad de Colima - Ingeniería en Computación Inteligente
-Materia: Programación Funcional
-Profesor: Gonzalez Zepeda Sebastian
-Semestre: Agosto 2025 - Enero 2026
-
-🎯 Objetivos
-Implementar MapReduce funcional desde cero
-Desarrollar operaciones de agregación composables
-Aplicar paralelismo funcional con funciones puras
-Crear combinadores para análisis distribuido
-Utilizar particionamiento funcional de datos
-Practicar lazy evaluation en grandes datasets
-
-🛠️ Tecnologías Utilizadas
-Lenguaje: Python 3.11+
-Paradigma: Programación Funcional + Distribuida
-Librerías:
-multiprocessing - Paralelismo
-dask - Computación paralela
-toolz - Utilidades funcionales
-pandas - DataFrames
-pyarrow - Serialización eficiente
-
-📦 Instalación
-```bash
-# Clonar el repositorio
-git clone https://github.com/tu-usuario/distributed-data-analysis.git
-cd distributed-data-analysis
-
-# Crear entorno virtual
-python -m venv venv
-source venv/bin/activate
-
-# Instalar dependencias
-pip install -r requirements.txt
-```
-
-**requirements.txt**
-```
-dask>=2023.12.0
-distributed>=2023.12.0
-toolz>=0.12.0
-pandas>=2.0.0
-pyarrow>=14.0.0
-numpy>=1.24.0
-multiprocessing-logging>=0.3.0
-```
-
-🚀 Uso del Sistema
-```python
-from src.mapreduce import MapReduce
-from src.aggregators import sum_aggregator, count_aggregator
-from toolz import compose
-
-# Crear instancia de MapReduce
-mr = MapReduce(workers=4)
-
-# Pipeline funcional distribuido
-result = (mr
-    .map(lambda line: line.strip().split())
-    .flat_map(lambda words: [(w, 1) for w in words])
-    .reduce_by_key(lambda a, b: a + b)
-    .sort_by_value(descending=True)
-    .collect())
-
-# Agregaciones composables
-analysis = (dataset
-    .partition_by('category')
-    .aggregate(
-        total=sum_aggregator('amount'),
-        count=count_aggregator(),
-        avg=compose(sum_aggregator('amount'), count_aggregator())
-    )
-    .compute())
-```
-
-📂 Estructura del Proyecto
-```
-distributed-data-analysis/
-├── src/
-│   ├── __init__.py
-│   ├── mapreduce.py        # Implementación MapReduce funcional
-│   ├── aggregators.py      # Agregadores composables
-│   ├── partitioners.py     # Estrategias de particionamiento
-│   ├── combiners.py        # Combinadores funcionales
-│   ├── distributed.py      # Coordinación distribuida
-│   └── visualization.py    # Visualización de resultados
-├── tests/
-│   ├── test_mapreduce.py
-│   ├── test_aggregators.py
-│   └── test_performance.py
-├── examples/
-│   ├── word_count.py       # Conteo de palabras
-│   ├── log_analysis.py     # Análisis de logs
-│   └── sales_analytics.py  # Análisis de ventas
-├── data/
-│   ├── sample/             # Datasets de ejemplo
-│   └── output/             # Resultados
-├── benchmarks/
-│   └── performance_tests.py
-├── docs/
-│   ├── architecture.md
-│   └── api_reference.md
-├── requirements.txt
-├── README.md
-└── .gitignore
-```
-
-🔑 Características Principales
-
-1. MapReduce Funcional
-```python
-from typing import Callable, Iterable, TypeVar, List, Tuple
-from functools import reduce
-from itertools import groupby
-from multiprocessing import Pool
-
-K = TypeVar('K')
-V = TypeVar('V')
-
-class MapReduce:
-    """Implementación funcional de MapReduce"""
-    
-    def __init__(self, workers: int = 4):
-        self.workers = workers
-        self.data = []
-    
-    def map(self, mapper: Callable) -> 'MapReduce':
-        """Map: aplicar función a cada elemento"""
-        with Pool(self.workers) as pool:
-            self.data = pool.map(mapper, self.data)
-        return self
-    
-    def flat_map(self, mapper: Callable) -> 'MapReduce':
-        """FlatMap: map que aplana resultados"""
-        with Pool(self.workers) as pool:
-            mapped = pool.map(mapper, self.data)
-            self.data = [item for sublist in mapped for item in sublist]
-        return self
-    
-    def reduce_by_key(self, reducer: Callable[[V, V], V]) -> 'MapReduce':
-        """Reduce: agregar valores por clave"""
-        # Ordenar por clave para groupby
-        sorted_data = sorted(self.data, key=lambda x: x[0])
-        
-        # Agrupar y reducir
-        result = []
-        for key, group in groupby(sorted_data, key=lambda x: x[0]):
-            values = [item[1] for item in group]
-            reduced_value = reduce(reducer, values)
-            result.append((key, reduced_value))
-        
-        self.data = result
-        return self
-    
-    def filter(self, predicate: Callable) -> 'MapReduce':
-        """Filter: filtrar elementos"""
-        self.data = list(filter(predicate, self.data)
-        return self
-    
-    def collect(self) -> List:
-        """Collect: materializar resultados"""
-        return self.data
-```
-
-2. Agregadores Composables
-```python
-from dataclasses import dataclass
-from typing import Callable, Any, List
-from functools import reduce
-
-@dataclass(frozen=True)
-class Aggregator:
-    """Agregador funcional composable"""
-    initializer: Callable[[], Any]
-    accumulator: Callable[[Any, Any], Any]
-    combiner: Callable[[Any, Any], Any]
-    finalizer: Callable[[Any], Any] = lambda x: x
-    
-    def aggregate(self, data: Iterable) -> Any:
-        """Aplicar agregación"""
-        acc = self.initializer()
-        for item in data:
-            acc = self.accumulator(acc, item)
-        return self.finalizer(acc)
-    
-    def map(self, fn: Callable) -> 'Aggregator':
-        """Transformar resultado final"""
-        return Aggregator(
-            self.initializer,
-            self.accumulator,
-            self.combiner,
-            lambda x: fn(self.finalizer(x))
-        )
-
-# Agregadores predefinidos
-def sum_aggregator(field: str = None):
-    """Agregador de suma"""
-    return Aggregator(
-        initializer=lambda: 0,
-        accumulator=lambda acc, x: acc + (x[field] if field else x),
-        combiner=lambda a, b: a + b
-    )
-
-def count_aggregator():
-    """Agregador de conteo"""
-    return Aggregator(
-        initializer=lambda: 0,
-        accumulator=lambda acc, x: acc + 1,
-        combiner=lambda a, b: a + b
-    )
-
-def avg_aggregator(field: str = None):
-    """Agregador de promedio"""
-    return Aggregator(
-        initializer=lambda: (0, 0),  # (sum, count)
-        accumulator=lambda acc, x: (
-            acc[0] + (x[field] if field else x),
-            acc[1] + 1
-        ),
-        combiner=lambda a, b: (a[0] + b[0], a[1] + b[1]),
-        finalizer=lambda x: x[0] / x[1] if x[1] > 0 else 0
-    )
-
-def compose_aggregators(**aggregators):
-    """Componer múltiples agregadores"""
-    def combined(data):
-        return {
-            name: agg.aggregate(data)
-            for name, agg in aggregators.items()
-        }
-    return combined
-```
-
-3. Particionamiento Funcional
-```python
-from typing import Callable, List, TypeVar
-from itertools import islice
-
-T = TypeVar('T')
-
-def partition(data: Iterable[T], n: int) -> List[List[T]]:
-    """Particionar datos en n chunks"""
-    data_list = list(data)
-    chunk_size = len(data_list) // n
-    remainder = len(data_list) % n
-    
-    chunks = []
-    start = 0
-    for i in range(n):
-        # Distribuir remainder entre chunks
-        size = chunk_size + (1 if i < remainder else 0)
-        chunks.append(data_list[start:start + size])
-        start += size
-    
-    return chunks
-
-def partition_by_key(data: Iterable[Tuple[K, V]], 
-                     key_fn: Callable[[K], int],
-                     n: int) -> List[List[Tuple[K, V]]]:
-    """Particionar por hash de clave"""
-    partitions = [[] for _ in range(n)]
-    for item in data:
-        key, value = item
-        partition_id = key_fn(key) % n
-        partitions[partition_id].append(item)
-    return partitions
-
-def partition_by_range(data: Iterable[T],
-                       key_fn: Callable[[T], Any],
-                       ranges: List[Tuple]) -> List[List[T]]:
-    """Particionar por rangos de valores"""
-    partitions = [[] for _ in range(len(ranges) + 1)]
-    for item in data:
-        value = key_fn(item)
-        partition_id = 0
-        for i, (start, end) in enumerate(ranges):
-            if start <= value < end:
-                partition_id = i
-                break
-        partitions[partition_id].append(item)
-    return partitions
-```
-
-4. Pipeline Distribuido Completo
-```python
-from toolz import compose, pipe
-
-def create_distributed_pipeline(workers=4):
-    """Crear pipeline de procesamiento distribuido"""
-    
-    mr = MapReduce(workers=workers)
-    
-    # Pipeline composable
-    pipeline = compose(
-        # 1. Cargar y particionar datos
-        lambda data: mr.load(data),
-        
-        # 2. Mapear: extraer características
-        lambda mr: mr.map(extract_features),
-        
-        # 3. Filter: remover inválidos
-        lambda mr: mr.filter(is_valid),
-        
-        # 4. FlatMap: expandir elementos
-        lambda mr: mr.flat_map(expand_items),
-        
-        # 5. Reduce: agregar por clave
-        lambda mr: mr.reduce_by_key(lambda a, b: a + b),
-        
-        # 6. Sort: ordenar resultados
-        lambda mr: mr.sort_by_value(descending=True),
-        
-        # 7. Collect: materializar
-        lambda mr: mr.collect()
-    )
-    
-    return pipeline
-
-# Uso
-pipeline = create_distributed_pipeline(workers=8)
-results = pipeline(large_dataset)
-```
-
-📊 Funcionalidades Implementadas
-
-**MapReduce**
-✅ Map, FlatMap, Filter
-✅ ReduceByKey con combiners
-✅ GroupByKey eficiente
-✅ Join distribuido
-
-**Agregación**
-✅ Sum, Count, Avg, Min, Max
-✅ Percentiles distribuidos
-✅ Agregaciones custom composables
-✅ Window functions
-
-**Particionamiento**
-✅ Hash partitioning
-✅ Range partitioning
-✅ Custom partitioners
-✅ Rebalanceo dinámico
-
-**Optimización**
-✅ Lazy evaluation
-✅ Combiners locales
-✅ Serialización eficiente
-✅ Caching inteligente
-
-🧪 Testing
-```bash
-# Tests unitarios
-pytest tests/ -v
-
-# Tests de performance
-pytest benchmarks/ -v
-
-# Tests con datasets grandes
-pytest tests/ -k "large" --timeout=300
-```
-
-📈 Pipeline de Desarrollo
-
-**Semana 1: MapReduce Base (30 Oct - 5 Nov)**
-Map, Reduce básico
-Particionamiento
-Paralelismo con multiprocessing
-
-**Semana 2: Operaciones Avanzadas (6 Nov - 12 Nov)**
-Agregadores composables
-Join distribuido
-Optimizaciones
-
-**Semana 3: Análisis Estadístico (13 Nov - 19 Nov)**
-Estadísticas distribuidas
-Visualización
-Casos de uso reales
-
-**Semana 4: Optimización (20 Nov)**
-Benchmarks
-Tuning de performance
-Documentación
-
-💼 Componente de Emprendimiento
-
-**Aplicación Real:** Plataforma de análisis de datos para empresas
-
-**Propuesta de Valor:**
-Procesamiento de TB de datos en minutos
-Escalabilidad horizontal
-API simple y funcional
-Costos reducidos vs soluciones cloud
-
-**Casos de Uso:**
-E-commerce: Análisis de comportamiento de usuarios
-Finance: Detección de fraude en transacciones
-IoT: Procesamiento de datos de sensores
-Marketing: Análisis de campañas multicanal
-
-📚 Referencias
-Dean, J., & Ghemawat, S. (2004). MapReduce: Simplified Data Processing on Large Clusters
-Dask Documentation: https://docs.dask.org/
-Toolz Documentation: https://toolz.readthedocs.io/
-Apache Spark Programming Guide
-
-🏆 Criterios de Evaluación
-MapReduce Funcional (30%): Corrección, paralelismo eficiente
-Agregadores Composables (25%): Diseño elegante, reusabilidad
-Performance (25%): Escalabilidad, benchmarks
-Testing y Documentación (20%): Cobertura, claridad
+El README original del repositorio se conserva en
+[`docs/README_original.md`](docs/README_original.md).

@@ -67,24 +67,13 @@ def compose_aggregators(**aggs: Aggregator):
     return combined
 
 
-from src.metricas import porcentaje
-
-
-def test_porcentaje_basico():
-    assert porcentaje(2, 5) == 40.0
-
-
-def test_porcentaje_total_cero_no_falla():
-    assert porcentaje(3, 0) == 0.0
-
-
-def test_porcentajes_de_todas_las_partes_suman_100():
-    conteos = (2, 2, 1)
-    total = sum(conteos)
-    assert round(sum(map(lambda c: porcentaje(c, total), conteos))) == 100
-
 def min_aggregator(field: str | None = None) -> Aggregator:
-    """Agregador del valor mínimo. Con datos vacíos regresa None."""
+    """Agregador del valor mínimo.
+
+    Pre: si se da `field`, cada elemento es un diccionario con esa llave y
+         valores comparables.
+    Post: aggregate() regresa el menor valor, o None si no hay datos.
+    """
     return Aggregator(
         initializer=lambda: None,
         accumulator=lambda acc, x: _menor(acc, x[field] if field else x),
@@ -100,8 +89,14 @@ def _menor(a, b):
         return a
     return a if a <= b else b
 
+
 def max_aggregator(field: str | None = None) -> Aggregator:
-    """Agregador del valor máximo. Con datos vacíos regresa None."""
+    """Agregador del valor máximo.
+
+    Pre: si se da `field`, cada elemento es un diccionario con esa llave y
+         valores comparables.
+    Post: aggregate() regresa el mayor valor, o None si no hay datos.
+    """
     return Aggregator(
         initializer=lambda: None,
         accumulator=lambda acc, x: _mayor(acc, x[field] if field else x),
@@ -117,10 +112,16 @@ def _mayor(a, b):
         return a
     return a if a >= b else b
 
+
 def monoid_aggregator(monoid, field: str | None = None) -> Aggregator:
     """Convierte un Monoid en un Aggregator.
+
     El neutro del Monoid es el valor inicial, y su `combine` sirve para
     acumular y para juntar resultados parciales de distintos workers.
+
+    Pre: `monoid` cumple las leyes de asociatividad e identidad.
+    Post: combinar los resultados de partes de los datos da lo mismo que
+          agregar todos los datos juntos.
     """
     return Aggregator(
         initializer=lambda: monoid.empty,
